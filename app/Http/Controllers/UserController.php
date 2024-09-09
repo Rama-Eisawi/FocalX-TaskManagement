@@ -16,7 +16,13 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
+        $user = Auth::user();
+        if ($user->role_id != 1) {
+            return ApiResponse::error('Unauthorized', 403, 'Only admins can view all users.');
+        }
+
+        $users = User::all();
+        return ApiResponse::success($users, 'Users retrieved successfully', 200);
     }
 
     /**
@@ -46,24 +52,54 @@ class UserController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $user = Auth::user();
+
+        // Allow only admin to see a specific user
+        if ($user->role_id != 1) {
+            return ApiResponse::error('Unauthorized', 403, 'Only admins can view a specific user.');
+        }
+
+        // Retrieve user (with soft-deleted check)
+        $user = User::findOrFail($id);
+
+        return ApiResponse::success($user, 'User retrieved successfully', 200);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UserFormRequest $request, $id)
     {
-        //
+        $user = Auth::user();
+        // Allow only admin to update a user
+        if ($user->role_id != 1) {
+            return ApiResponse::error('Unauthorized', 403, 'Only admins can update users.');
+        }
+
+        // Retrieve and update the user
+        $userToUpdate = User::findOrFail($id);
+        $userToUpdate->update($request->validated());
+
+        return ApiResponse::success($userToUpdate, 'User updated successfully', 200);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Soft Delete the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
-        //
+        $user = Auth::user();
+        // Only admin can soft delete a user
+        if ($user->role_id != 1) {
+            return ApiResponse::error('Unauthorized', 403, 'Only admins can delete users.');
+        }
+
+        // Find the user and soft delete
+        $userToDelete = User::findOrFail($id);
+        $userToDelete->delete();
+
+        return ApiResponse::success(null, 'User deleted successfully', 200);
     }
 }
