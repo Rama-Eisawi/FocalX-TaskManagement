@@ -11,6 +11,8 @@ class Task extends Model
     use HasFactory;
     protected $table = 'tasks';
     protected $primaryKey = 'task_id';
+    protected $fillable = ['title', 'description', 'priority', 'due_date', 'status', 'assigned_to', 'created_by'];
+
     protected $guarded = ['task_id'];
 
     //Task assigned to one user
@@ -24,7 +26,14 @@ class Task extends Model
     {
         return $this->belongsTo(User::class, 'created_by', 'user_id');
     }
-
+    public function scopeByPriority($query, $priority)
+    {
+        return $query->where('priority', $priority);
+    }
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('status', $status);
+    }
     /**
      * Accessor for `due_date`
      * This formats the `due_date` when it is retrieved (get).

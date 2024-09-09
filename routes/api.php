@@ -26,10 +26,17 @@ Route::controller(AuthController::class)
 
 Route::middleware(['auth:api'])->group(function () {
 
-    Route::post('/tasks', [TaskController::class, 'store']);
-    Route::put('/tasks/{task}', [TaskController::class, 'update']);
-    Route::put('/tasks/{task}', [TaskController::class, 'update']);
+    //manage tasks
+    Route::post('/tasks', [TaskController::class, 'store']); //done
+    Route::get('/tasks', [TaskController::class, 'index']); //done
+    Route::get('/tasks/{task}', [TaskController::class, 'show']); //done
+    Route::put('/tasks/{task}', [TaskController::class, 'update']);//done
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 
+    //assigned task
+    Route::put('/tasks/{task}/{assigned_to}', [TaskController::class, 'assigned']);
+
+    //manage users
     Route::post('/users', [UserController::class, 'store']);
     Route::get('/users', [UserController::class, 'index']);
     Route::put('/users/{user}', [UserController::class, 'update']);

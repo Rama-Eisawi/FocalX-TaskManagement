@@ -13,9 +13,33 @@ class TaskController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        $user = Auth::user();
+        $priority = $request->query('priority');
+        $status = $request->query('status');
+        $query = Task::query();
+        if ($user->role_id == 3) {
+            $query->where('assigned_to', $user->user_id);
+        }
+        if ($user->role_id == 2) {
+            $query->where('created_by', $user->user_id);
+        }
+
+        // Apply the filter if the 'priority' parameter is provided
+        if ($priority) {
+            $query->byPriority($priority);
+        }
+
+        // Apply the filter if the 'status' parameter is provided
+        if ($status) {
+            $query->byStatus($status);
+        }
+
+        // Get the filtered tasks
+        $tasks = $query->get();
+
+        return ApiResponse::success($tasks, 'Tasks retrieved successfully', 200);
     }
 
     /**
@@ -41,10 +65,46 @@ class TaskController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, $id)
     {
-        //
+        // Fetch the authenticated user
+        $user = Auth::user();
+
+        // Find the task by ID
+        $task = Task::find($id);
+
+        if (!$task) {
+            return ApiResponse::error('Task not found.', 404, '');
+        }
+
+        // Check if the user is an admin
+        if ($user->role_id == 1) {
+            // Admins can view any task
+            return ApiResponse::success($task, 'Task retrieved successfully', 200);
+        }
+
+        // Check if the user is a manager
+        if ($user->role_id == 2) {
+            // Managers can view only tasks they created
+            if ($task->created_by == $user->user_id) {
+                return ApiResponse::success($task, 'Task retrieved successfully', 200);
+            }
+            return ApiResponse::error('You are not authorized to view this task.', 403, 'unauthenticated');
+        }
+
+        // Check if the user is a regular user
+        if ($user->role_id == 3) {
+            // Users can view only tasks assigned to them
+            if ($task->assigned_to == $user->user_id) {
+                return ApiResponse::success($task, 'Task retrieved successfully', 200);
+            }
+            return ApiResponse::error('You are not authorized to view this task.', 403, 'unauthenticated');
+        }
+
+        // For other roles, deny access
+        return ApiResponse::error('You are not authorized to view this task.', 403, 'unauthenticated');
     }
+
 
     /**
      * Update the specified resource in storage.
@@ -71,6 +131,7 @@ class TaskController extends Controller
         return ApiResponse::success('Task updated successfully', $task);
     }
 
+    public function assigned() {}
 
     /**
      * Remove the specified resource from storage.
