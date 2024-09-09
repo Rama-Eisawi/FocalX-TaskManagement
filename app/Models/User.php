@@ -16,9 +16,8 @@ class User extends Authenticatable implements JWTSubject
     protected $table = 'users';
     protected $primaryKey = 'user_id';
 
-
     // Guard role_id to prevent mass assignment
-    protected $guarded = ['user_id', 'role_id', 'created_at', 'updated_at'];
+    protected $guarded = ['user_id', 'created_at', 'updated_at'];
 
     // Add the JWTSubject methods
     public function getJWTIdentifier()
@@ -35,27 +34,20 @@ class User extends Authenticatable implements JWTSubject
      */
     public function role()
     {
-        return $this->belongsTo(Role::class);
+        return $this->belongsTo(Role::class, 'role_id', 'role_id');
     }
 
-    /**
-     * Get the tasks assigned to the user.
-     */
+    //user can have multiple tasks assigned to them
     public function tasks()
     {
-        return $this->hasMany(Task::class, 'assigned_to');
+        return $this->hasMany(Task::class, 'assigned_to', 'user_id');
     }
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
+    //manager/admin can create many tasks
+    public function createdTasks()
+    {
+        return $this->hasMany(Task::class, 'created_by', 'user_id');
+    }
 
     /**
      * The attributes that should be hidden for serialization.

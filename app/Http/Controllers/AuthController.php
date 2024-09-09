@@ -30,7 +30,7 @@ class AuthController extends Controller
         $token = JWTAuth::attempt($credentials);
         // Attempt to authenticate the user with the provided credentials
         if (!$token)
-            return ApiResponse::error('كلمة السر غير صحيحة', 401);
+            return ApiResponse::error('Validation error', 401, 'كلمة السر غير صحيحة');
 
         // Retrieve the authenticated user
         $user = Auth::user();
@@ -48,7 +48,7 @@ class AuthController extends Controller
             return ApiResponse::success(null, 'User logged out successfully', 200);
         } catch (\Tymon\JWTAuth\Exceptions\JWTException $exception) {
             // Something went wrong while attempting to invalidate the token
-            return ApiResponse::error('Failed to log out, please try again', 500);
+            return ApiResponse::error('Logout error', 500, 'فشل تسجيل الخروج، الرجاء المحاولة لاحقا');
         }
     }
 }

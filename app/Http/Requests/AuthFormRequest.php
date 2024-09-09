@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Requests;
+
 use Illuminate\Contracts\Validation\Validator;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Foundation\Http\FormRequest;
@@ -13,7 +14,7 @@ class AuthFormRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -96,11 +97,14 @@ class AuthFormRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator)
     {
+        $errors = $validator->errors()->all();
+
         // Customize the failed validation response.
         throw new HttpResponseException(
             ApiResponse::error(
-                'Validation errors occurred .',
-                422
+                'Validation errors occurred.',
+                422,
+                $errors
             )
         );
     }

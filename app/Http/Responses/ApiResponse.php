@@ -29,11 +29,12 @@ class ApiResponse
      * @param int $statusCode
      * @return \Illuminate\Http\JsonResponse
      */
-    public static function error($message = 'Operation failed', $statusCode = 400)
+    public static function error($message = 'Operation failed', $statusCode = 400,$error)
     {
         return response()->json([
             'status' => false,
             'message' => $message,
+            'errors'=>$error,
         ], $statusCode);
     }
 }
