@@ -36,7 +36,7 @@ class TaskController extends Controller
             $query->byStatus($status);
         }
 
-        // Get the filtered tasks
+        // Fetch tasks (soft-deleted tasks are automatically excluded)
         $tasks = $query->get();
 
         return ApiResponse::success($tasks, 'Tasks retrieved successfully', 200);
@@ -131,13 +131,40 @@ class TaskController extends Controller
         return ApiResponse::success('Task updated successfully', $task);
     }
 
-    public function assigned() {}
+    public function assigned(Task $task, $assigned_to)
+    {
+        // Fetch the authenticated user
+        $user = Auth::user();
+        // Check if the user is not a manager
+        if ($user->role_id != 2) {
+            return ApiResponse::error('Unauthorized', 403, 'You are not allowed to assign tasks.');
+        }
+        // For managers, ensure they can only assign tasks they created or that were created by admins
+        if ($task->created_by != $user->user_id && $task->created_by != 1) {
+            return ApiResponse::error('Unauthorized', 403, 'You can only assign tasks you created or tasks created by admins.');
+        }
+
+        // Update the task's assigned_to field
+        $task->assigned_to = $assigned_to;
+        $task->save();
+
+        return ApiResponse::success('Task assigned successfully', $task);
+    }
+
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Task $task)
     {
-        //
+        $user = Auth::user();
+
+        // Check if the user is an admin or the manager who created the task
+        if ($user->role_id == 1 || ($user->role_id == 2 && $task->created_by == $user->user_id)) {
+            $task->delete(); // Soft delete the task
+            return ApiResponse::success('Task deleted successfully', $task);
+        }
+
+        return ApiResponse::error('Unauthorized', 403, 'You are not allowed to delete this task.');
     }
 }
